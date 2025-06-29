@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi de Séances de Musculation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Styles de base pour le corps et la police */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Arrière-plan doux */
+            color: #333; /* Couleur de texte principale */
+        }
+        /* Conteneur principal de l'application */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto; /* Centrage et espacement */
+            padding: 1.5rem;
+            background-color: #ffffff; /* Fond blanc pour le contenu */
+            border-radius: 12px; /* Coins arrondis */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Ombre douce */
+        }
+        /* Styles pour les groupes de formulaires (label + input) */
+        .form-group label {
+            font-weight: 600;
+            color: #4a5568; /* Couleur du label */
+        }
+        .form-group input, .form-group select {
+            border: 1px solid #cbd5e0; /* Bordure légère */
+            border-radius: 8px; /* Coins arrondis */
+            padding: 0.75rem 1rem;
+            width: 100%;
+            box-sizing: border-box; /* Inclut le padding et la bordure dans la largeur */
+            transition: border-color 0.2s; /* Transition douce pour le focus */
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #6366f1; /* Couleur de bordure au focus */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Ombre au focus */
+        }
+        /* Styles des boutons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s; /* Transitions pour le survol */
+        }
+        .btn-primary {
+            background-color: #6366f1; /* Bleu indigo */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5; /* Bleu indigo plus foncé au survol */
+            transform: translateY(-1px); /* Léger effet de soulèvement */
+        }
+        .btn-secondary {
+            background-color: #ef4444; /* Rouge pour l'action secondaire */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #dc2626; /* Rouge plus foncé au survol */
+            transform: translateY(-1px);
+        }
+        /* Styles du tableau */
+        table {
+            width: 100%;
+            border-collapse: collapse; /* Supprime l'espace entre les cellules */
+            margin-top: 1.5rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0; /* Bordure inférieure des cellules */
+        }
+        th {
+            background-color: #f8fafc; /* Fond clair pour les en-têtes */
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            cursor: pointer; /* Indique que les colonnes sont triables */
+            position: relative;
+        }
+        th:hover {
+            background-color: #e2e8f0; /* Changement de couleur au survol des en-têtes */
+        }
+        /* Indicateurs de tri pour les en-têtes de tableau */
+        th.asc::after {
+            content: ' ▲'; /* Flèche vers le haut pour le tri ascendant */
+            font-size: 0.7em;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        th.desc::after {
+            content: ' ▼'; /* Flèche vers le bas pour le tri descendant */
+            font-size: 0.7em;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        tr:hover {
+            background-color: #f0f4f8; /* Couleur de survol pour les lignes du tableau */
+        }
+        /* Couleurs pastel pour alterner les lignes par date */
+        .bg-pink-pastel {
+            background-color: #fce7f3; /* Un rose clair */
+        }
+        .bg-blue-pastel {
+            background-color: #e0f2fe; /* Un bleu clair */
+        }
+        /* Conteneur des graphiques */
+        .chart-container {
+            position: relative;
+            height: 400px; /* Hauteur fixe pour le graphique */
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Overlay de chargement (principalement pour l'initialisation ici) */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8); /* Fond semi-transparent */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Assure qu'il est au-dessus de tout */
+            font-size: 1.5rem;
+            color: #6366f1;
+            font-weight: bold;
+        }
+        /* Styles responsifs pour les petits écrans (mobile) */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+                padding: 1rem;
+            }
+            .grid-cols-2 {
+                grid-template-columns: 1fr; /* Une seule colonne sur mobile */
+            }
+            /* Rendre le tableau empilable sur mobile */
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #ccc;
+                margin-bottom: 0.5rem;
+                border-radius: 8px;
+            }
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%; /* Espace pour les labels */
+                text-align: right;
+            }
+            td:before {
+                position: absolute;
+                top: 0;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 600;
+                color: #4a5568;
+            }
+            /* Labels de données pour le tableau responsif */
+            td:nth-of-type(1):before { content: "Date"; }
+            td:nth-of-type(2):before { content: "Début"; }
+            td:nth-of-type(3):before { content: "Fin"; }
+            td:nth-of-type(4):before { content: "Exercice"; }
+            td:nth-of-type(5):before { content: "Charge (kg)"; }
+            td:nth-of-type(6):before { content: "Répétitions"; }
+            td:nth-of-type(7):before { content: "Poids (kg)"; }
+            td:nth-of-type(8):before { content: "Graisse (%)"; }
+            td:nth-of-type(9):before { content: "Total Exercice (kg)"; } /* Ajusté pour le nouvel ordre */
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">Chargement des données...</div>
+
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Suivi de Séances de Musculation</h1>
+
+        <form id="workoutForm" class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-group">
+                    <label for="date" class="block text-sm mb-1">Date :</label>
+                    <input type="date" id="date" name="date" class="w-full" required>
+                </div>
+                <div class="form-group">
+                    <label for="startTime" class="block text-sm mb-1">Heure de début :</label>
+                    <input type="time" id="startTime" name="startTime" class="w-full" required>
+                </div>
+                <div class="form-group">
+                    <label for="endTime" class="block text-sm mb-1">Heure de fin :</label>
+                    <input type="time" id="endTime" name="endTime" class="w-full" required>
+                </div>
+                <div class="form-group">
+                    <label for="exercise" class="block text-sm mb-1">Exercice / Machine :</label>
+                    <input type="text" id="exercise" name="exercise" class="w-full" placeholder="Ex: Squat, Presse à cuisses" required>
+                </div>
+                <div class="form-group">
+                    <label for="weightUsed" class="block text-sm mb-1">Charge utilisée (kg) :</label>
+                    <input type="number" id="weightUsed" name="weightUsed" class="w-full" step="0.5" min="0" placeholder="Ex: 50" required>
+                </div>
+                <div class="form-group">
+                    <label for="repetitions" class="block text-sm mb-1">Nombre de répétitions :</label>
+                    <input type="number" id="repetitions" name="repetitions" class="w-full" min="1" placeholder="Ex: 10" required>
+                </div>
+                <div class="form-group">
+                    <label for="bodyWeight" class="block text-sm mb-1">Poids corporel (kg) :</label>
+                    <input type="number" id="bodyWeight" name="bodyWeight" class="w-full" step="0.1" min="0" placeholder="Ex: 60.5" required>
+                </div>
+                <div class="form-group">
+                    <label for="bodyFat" class="block text-sm mb-1">Taux de graisse (%) :</label>
+                    <input type="number" id="bodyFat" name="bodyFat" class="w-full" step="0.1" min="0" max="100" placeholder="Ex: 18.0" required>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button type="submit" class="btn btn-primary">Ajouter l'exercice</button>
+                <button type="button" id="clearAllBtn" class="btn btn-secondary">Effacer tout</button>
+            </div>
+        </form>
+
+        <h2 class="text-2xl font-bold text-center mb-4 text-indigo-600">Historique des Séances</h2>
+        <div class="overflow-x-auto rounded-lg shadow mb-8">
+            <table id="workoutTable" class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th data-sort="date">Date</th>
+                        <th data-sort="startTime">Début</th>
+                        <th data-sort="endTime">Fin</th>
+                        <th data-sort="exercise">Exercice</th>
+                        <th data-sort="weightUsed">Charge (kg)</th>
+                        <th data-sort="repetitions">Répétitions</th>
+                        <th data-sort="bodyWeight">Poids (kg)</th>
+                        <th data-sort="bodyFat">Graisse (%)</th>
+                        <th>Total Exercice (kg)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <h2 class="text-2xl font-bold text-center mb-4 text-indigo-600">Graphiques de Progression</h2>
+        <div class="chart-container">
+            <div class="form-group mb-4">
+                <label for="exerciseSelect" class="block text-sm mb-1">Sélectionner un exercice :</label>
+                <select id="exerciseSelect" class="w-full p-2 border border-gray-300 rounded-md"></select>
+            </div>
+            <canvas id="weightChart"></canvas>
+            <p id="noDataMessage" class="text-center text-gray-500 mt-4 hidden">Pas de données pour cet exercice.</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Références aux éléments du DOM
+        const workoutForm = document.getElementById('workoutForm');
+        const workoutTableBody = document.querySelector('#workoutTable tbody');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const exerciseSelect = document.getElementById('exerciseSelect');
+        const weightChartCanvas = document.getElementById('weightChart');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const tableHeaders = document.querySelectorAll('#workoutTable th[data-sort]');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        const LOCAL_STORAGE_KEY = 'workoutTrackerData'; // Clé pour le stockage local
+
+        let myChart; // Variable pour l'instance Chart.js
+        let workoutsData = []; // Tableau pour stocker toutes les données de séance
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc'; // 'asc' ou 'desc'
+
+        // Map pour stocker la couleur de chaque date afin d'alterner les couleurs des lignes du tableau
+        let dateColorMap = {};
+        // Variable pour suivre le dernier index de couleur attribué
+        let lastColorIndex = -1;
+        const colors = ['bg-pink-pastel', 'bg-blue-pastel'];
+
+        /**
+         * Formate une chaîne de date de AAAA-MM-JJ à JJ/MM/AA pour l'affichage.
+         * @param {string} dateString - La date au format AAAA-MM-JJ.
+         * @returns {string} La date formatée en JJ/MM/AA.
+         */
+        const formatDateForDisplay = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year.substring(2)}`; // Obtient les deux derniers chiffres de l'année
+        };
+
+        /**
+         * Attribue une couleur pastel unique à chaque date pour l'alternance des lignes du tableau.
+         * @param {string} date - La date au format AAAA-MM-JJ.
+         * @returns {string} La classe CSS de couleur pastel.
+         */
+        const getColorForDate = (date) => {
+            if (!dateColorMap[date]) {
+                // Si la date n'est pas dans la map, détermine la couleur suivante
+                lastColorIndex = (lastColorIndex + 1) % colors.length;
+                dateColorMap[date] = colors[lastColorIndex];
+            }
+            return dateColorMap[date];
+        };
+
+        /**
+         * Sauvegarde les données des séances dans le stockage local.
+         */
+        const saveWorkouts = () => {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(workoutsData));
+            } catch (e) {
+                console.error("Erreur lors de l'enregistrement des données dans le stockage local:", e);
+                alert("Impossible d'enregistrer les données. Le stockage local est peut-être plein ou bloqué.");
+            }
+        };
+
+        /**
+         * Charge les séances d'entraînement depuis le stockage local.
+         */
+        const loadWorkouts = () => {
+            loadingOverlay.style.display = 'flex'; // Affiche l'overlay de chargement
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedData) {
+                    workoutsData = JSON.parse(storedData);
+                    // S'assurer que les horodatages sont des objets Date pour un tri correct
+                    workoutsData.forEach(workout => {
+                        if (typeof workout.timestamp === 'string') {
+                            workout.timestamp = new Date(workout.timestamp);
+                        }
+                    });
+                } else {
+                    workoutsData = []; // Initialise un tableau vide si aucune donnée n'est trouvée
+                }
+            } catch (e) {
+                console.error("Erreur lors du chargement des données depuis le stockage local:", e);
+                alert("Erreur lors du chargement des données. Vos données ont peut-être été corrompues.");
+                workoutsData = []; // Réinitialise pour éviter d'autres erreurs
+            } finally {
+                renderWorkoutsTable(workoutsData); // Affiche les données chargées
+                populateExerciseSelect(workoutsData); // Met à jour la liste déroulante
+                renderChartForSelectedExercise(); // Met à jour le graphique
+                loadingOverlay.style.display = 'none'; // Cache l'overlay de chargement
+            }
+        };
+
+        /**
+         * Affiche toutes les séances d'entraînement dans le tableau HTML.
+         * Les séances sont regroupées par date pour afficher les informations communes (date, heure, poids corporel, graisse).
+         * @param {Array<Object>} workoutsToRender - Le tableau des objets de séance à afficher.
+         */
+        const renderWorkoutsTable = (workoutsToRender) => {
+            workoutTableBody.innerHTML = ''; // Efface les lignes existantes du tableau
+            dateColorMap = {}; // Réinitialise la map de couleurs pour le nouveau rendu
+            lastColorIndex = -1; // Réinitialise l'index de couleur pour le nouveau rendu
+
+            // Trie les séances par date pour une coloration cohérente, puis par heure de début pour les exercices de la même date
+            workoutsToRender.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA - dateB;
+                }
+                // Si les dates sont les mêmes, trie par heure de début
+                const timeA = new Date(`2000/01/01T${a.startTime}`);
+                const timeB = new Date(`2000/01/01T${b.endTime}`); // Utilise endTime pour un tri cohérent si plusieurs exercices
+                return timeA - timeB;
+            });
+
+            // Regroupe les séances par date
+            const groupedWorkouts = new Map();
+            workoutsToRender.forEach(workout => {
+                if (!groupedWorkouts.has(workout.date)) {
+                    groupedWorkouts.set(workout.date, {
+                        common: {
+                            date: workout.date,
+                            startTime: workout.startTime,
+                            endTime: workout.endTime,
+                            bodyWeight: workout.bodyWeight,
+                            bodyFat: workout.bodyFat
+                        },
+                        exercises: [],
+                        totalWeightForDay: 0 // Initialise le total journalier
+                    });
+                }
+                // Calcule le poids total par exercice (charge * répétitions) et l'ajoute à la liste des exercices
+                const totalWeightPerExercise = workout.weightUsed * workout.repetitions;
+                groupedWorkouts.get(workout.date).exercises.push({
+                    exercise: workout.exercise,
+                    weightUsed: workout.weightUsed,
+                    repetitions: workout.repetitions,
+                    totalWeightPerExercise: totalWeightPerExercise // Stocke ici pour l'affichage
+                });
+                // Ajoute au total journalier pour cette date
+                groupedWorkouts.get(workout.date).totalWeightForDay += totalWeightPerExercise;
+            });
+
+            // Itère sur les séances regroupées pour construire le tableau HTML
+            groupedWorkouts.forEach((dateGroup, dateKey) => {
+                const commonData = dateGroup.common;
+                const exercises = dateGroup.exercises;
+                const rowColorClass = getColorForDate(dateKey); // Obtient la couleur pour la date
+
+                // Calcule le nombre de lignes que les cellules communes devront couvrir (exercices + 1 ligne de résumé)
+                const numRowsForCommonData = exercises.length + (exercises.length > 0 ? 1 : 0);
+
+                exercises.forEach((exercise, index) => {
+                    const row = workoutTableBody.insertRow();
+                    row.classList.add(rowColorClass); // Applique la couleur à chaque ligne du groupe
+
+                    if (index === 0) {
+                        // Pour la première ligne de chaque groupe de date, ajoute les données communes avec des rowspans
+                        let cell = row.insertCell(); // Date
+                        cell.textContent = formatDateForDisplay(commonData.date);
+                        cell.rowSpan = numRowsForCommonData;
+
+                        cell = row.insertCell(); // Heure de début
+                        cell.textContent = commonData.startTime;
+                        cell.rowSpan = numRowsForCommonData;
+
+                        cell = row.insertCell(); // Heure de fin
+                        cell.textContent = commonData.endTime;
+                        cell.rowSpan = numRowsForCommonData; 
+                        
+                        row.insertCell().textContent = exercise.exercise; // Exercice
+                        row.insertCell().textContent = exercise.weightUsed; // Charge
+                        row.insertCell().textContent = exercise.repetitions; // Répétitions
+
+                        cell = row.insertCell(); // Poids corporel
+                        cell.textContent = commonData.bodyWeight;
+                        cell.rowSpan = numRowsForCommonData;
+
+                        cell = row.insertCell(); // Taux de graisse
+                        cell.textContent = commonData.bodyFat;
+                        cell.rowSpan = numRowsForCommonData;
+
+                        row.insertCell().textContent = exercise.totalWeightPerExercise.toFixed(1); // Total par exercice (dernière colonne)
+
+                    } else {
+                        // Pour les lignes suivantes de la même date, ajoute uniquement les données spécifiques à l'exercice
+                        // Les cellules pour la Date, le Début, la Fin, le Poids corporel et le Taux de graisse sont omises car elles sont fusionnées
+                        row.insertCell().textContent = exercise.exercise; // Exercice
+                        row.insertCell().textContent = exercise.weightUsed; // Charge
+                        row.insertCell().textContent = exercise.repetitions; // Répétitions
+                        row.insertCell().textContent = exercise.totalWeightPerExercise.toFixed(1); // Total par exercice (dernière colonne)
+                    }
+                });
+
+                // Ajoute une ligne de résumé pour le total journalier si des exercices ont été ajoutés pour cette date
+                if (exercises.length > 0) {
+                    const summaryRow = workoutTableBody.insertRow();
+                    summaryRow.classList.add(rowColorClass); // Applique la même couleur
+                    summaryRow.classList.add('font-bold'); // Met en gras
+                    summaryRow.classList.add('border-t-2', 'border-gray-300'); // Ajoute une bordure supérieure pour la séparation
+
+                    // Crée une cellule pour l'étiquette "Total Journalier" qui s'étend sur les colonnes Exercice à Répétitions
+                    const totalLabelCell = summaryRow.insertCell();
+                    totalLabelCell.colSpan = 3; // S'étend sur Exercice, Charge, Répétitions
+                    totalLabelCell.textContent = 'Total Journalier :';
+
+                    // Cette cellule affichera le total journalier dans la colonne "Total Exercice (kg)".
+                    const dailyTotalCell = summaryRow.insertCell();
+                    dailyTotalCell.textContent = dateGroup.totalWeightForDay.toFixed(1) + ' kg';
+                    
+                    // Aucune cellule pour la Date, le Début, la Fin, le Poids, et la Graisse car elles sont fusionnées à partir de la première ligne.
+                }
+            });
+        };
+
+        /**
+         * Remplit la liste déroulante de sélection d'exercices avec les exercices uniques trouvés dans les données.
+         * @param {Array<Object>} workouts - Le tableau des objets de séance.
+         */
+        const populateExerciseSelect = (workouts) => {
+            exerciseSelect.innerHTML = '<option value="">-- Sélectionner --</option>'; // Option par défaut
+            // Extrait les noms d'exercices uniques et les trie alphabétiquement
+            const uniqueExercises = [...new Set(workouts.map(w => w.exercise))].sort(); 
+            uniqueExercises.forEach(exercise => {
+                const option = document.createElement('option');
+                option.value = exercise;
+                option.textContent = exercise;
+                exerciseSelect.appendChild(option);
+            });
+        };
+
+        /**
+         * Affiche un graphique de progression du poids pour un exercice donné.
+         * @param {string} exerciseName - Le nom de l'exercice à graphiquer.
+         */
+        const renderChart = (exerciseName) => {
+            // Filtre les séances pour l'exercice sélectionné et les trie par date
+            const filteredWorkouts = workoutsData.filter(w => w.exercise === exerciseName)
+                                            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (myChart) {
+                myChart.destroy(); // Détruit l'instance de graphique précédente si elle existe
+            }
+
+            if (filteredWorkouts.length === 0) {
+                // Cache le graphique et affiche un message si aucune donnée n'est disponible
+                weightChartCanvas.style.display = 'none';
+                noDataMessage.classList.remove('hidden');
+                return;
+            } else {
+                weightChartCanvas.style.display = 'block';
+                noDataMessage.classList.add('hidden');
+            }
+
+            // Prépare les labels (dates) et les données (poids utilisés) pour le graphique
+            const labels = filteredWorkouts.map(w => formatDateForDisplay(w.date));
+            const data = filteredWorkouts.map(w => w.weightUsed);
+
+            const ctx = weightChartCanvas.getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Charge utilisée pour ${exerciseName} (kg)`,
+                        data: data,
+                        borderColor: '#6366f1', /* Couleur de la ligne */
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)', /* Couleur de remplissage sous la ligne */
+                        tension: 0.3, /* Courbe de la ligne */
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#ffffff',
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: '#4f46e5',
+                        pointHoverBorderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, /* Permet au graphique de s'adapter à la hauteur du conteneur */
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return `Date: ${context[0].label}`;
+                                    },
+                                label: function(context) {
+                                    return `Charge: ${context.raw} kg`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date de la séance',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Charge (kg)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        };
+
+        /**
+         * Déclenche le rendu du graphique pour l'exercice actuellement sélectionné dans la liste déroulante.
+         */
+        const renderChartForSelectedExercise = () => {
+            const selectedExercise = exerciseSelect.value;
+            if (selectedExercise) {
+                renderChart(selectedExercise);
+            } else {
+                // Si aucun exercice n'est sélectionné, cache le graphique et affiche un message
+                if (myChart) {
+                    myChart.destroy();
+                }
+                weightChartCanvas.style.display = 'none';
+                noDataMessage.classList.remove('hidden');
+            }
+        };
+
+        // Gère la soumission du formulaire pour ajouter un nouvel exercice
+        workoutForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Empêche la soumission par défaut du formulaire (qui rechargerait la page)
+
+            // Récupère les valeurs du formulaire
+            const date = document.getElementById('date').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const exercise = document.getElementById('exercise').value.trim(); // Supprime les espaces blancs
+            const weightUsed = parseFloat(document.getElementById('weightUsed').value);
+            const repetitions = parseInt(document.getElementById('repetitions').value);
+            const bodyWeight = parseFloat(document.getElementById('bodyWeight').value);
+            const bodyFat = parseFloat(document.getElementById('bodyFat').value);
+
+            if (!exercise) {
+                alert('Veuillez entrer le nom de l\'exercice.');
+                return;
+            }
+
+            const newWorkout = {
+                date, // Stocke la date au format AAAA-MM-JJ pour la cohérence de l'entrée et le tri
+                startTime,
+                endTime,
+                exercise,
+                weightUsed,
+                repetitions,
+                bodyWeight,
+                bodyFat,
+                timestamp: new Date().toISOString() // Horodatage ISO string pour la persistance
+            };
+
+            workoutsData.push(newWorkout); // Ajoute la nouvelle séance au tableau en mémoire
+            saveWorkouts(); // Sauvegarde le tableau mis à jour dans le stockage local
+            
+            // Met à jour l'affichage
+            renderWorkoutsTable(workoutsData);
+            populateExerciseSelect(workoutsData);
+            renderChartForSelectedExercise();
+            
+            // Efface uniquement les champs spécifiques à l'exercice pour une saisie rapide de la prochaine entrée
+            document.getElementById('exercise').value = '';
+            document.getElementById('weightUsed').value = '';
+            document.getElementById('repetitions').value = '';
+            document.getElementById('exercise').focus(); // Met le focus sur le champ de l'exercice pour la prochaine entrée
+        });
+
+        // Gère le clic sur le bouton "Effacer tout"
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Êtes-vous sûr(e) de vouloir effacer toutes les séances ? Cette action est irréversible.')) {
+                workoutsData = []; // Efface toutes les données en mémoire
+                saveWorkouts(); // Sauvegarde le tableau vide dans le stockage local
+                
+                // Réinitialise l'affichage
+                renderWorkoutsTable(workoutsData);
+                populateExerciseSelect(workoutsData);
+                renderChartForSelectedExercise();
+                
+                // Réinitialise tous les champs du formulaire après l'effacement
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const hours = String(today.getHours()).padStart(2, '0');
+                const minutes = String(today.getMinutes()).padStart(2, '0');
+
+                document.getElementById('date').value = `${year}-${month}-${day}`;
+                document.getElementById('startTime').value = `${hours}:${minutes}`;
+                document.getElementById('endTime').value = `${hours}:${minutes}`;
+                document.getElementById('exercise').value = '';
+                document.getElementById('weightUsed').value = '';
+                document.getElementById('repetitions').value = '';
+                document.getElementById('bodyWeight').value = '';
+                document.getElementById('bodyFat').value = '';
+            }
+        });
+
+        // Fonctionnalité de tri des colonnes du tableau (triera les données workoutsData en mémoire)
+        tableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.sort;
+                if (!column) return; // Ignore si la colonne n'est pas triable
+
+                // Détermine la direction du tri (alternance asc/desc)
+                if (currentSortColumn === column) {
+                    currentSortDirection = (currentSortDirection === 'asc') ? 'desc' : 'asc';
+                } else {
+                    currentSortColumn = column;
+                    currentSortDirection = 'asc'; // Par défaut, tri ascendant pour une nouvelle colonne
+                }
+
+                // Supprime les indicateurs de tri précédents de tous les en-têtes
+                tableHeaders.forEach(h => {
+                    h.classList.remove('asc', 'desc');
+                });
+                // Ajoute l'indicateur de tri actuel à l'en-tête cliqué
+                header.classList.add(currentSortDirection);
+
+                // Trie les données en mémoire
+                workoutsData.sort((a, b) => {
+                    let valA = a[column];
+                    let valB = b[column];
+
+                    // Gère les différents types de données pour un tri correct
+                    if (column === 'date') {
+                        valA = new Date(valA);
+                        valB = new Date(valB);
+                    } else if (column === 'startTime' || column === 'endTime') {
+                        valA = new Date(`2000/01/01T${valA}`); // Crée un objet Date pour comparer les heures
+                        valB = new Date(`2000/01/01T${valB}`);
+                    } else if (['weightUsed', 'repetitions', 'bodyWeight', 'bodyFat'].includes(column)) {
+                        valA = parseFloat(valA);
+                        valB = parseFloat(valB);
+                    }
+
+                    if (valA < valB) {
+                        return currentSortDirection === 'asc' ? -1 : 1;
+                    }
+                    if (valA > valB) {
+                        return currentSortDirection === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                });
+
+                // Réaffiche le tableau avec les données triées
+                renderWorkoutsTable(workoutsData);
+            });
+        });
+
+        // Écouteur d'événement pour le changement de sélection d'exercice dans la liste déroulante
+        exerciseSelect.addEventListener('change', renderChartForSelectedExercise);
+
+        // Initialisation de l'application au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWorkouts(); // Charge les données existantes au démarrage
+
+            // Définit la date et l'heure actuelles comme valeurs par défaut pour les champs du formulaire
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            document.getElementById('date').value = `${year}-${month}-${day}`;
+            document.getElementById('startTime').value = `${hours}:${minutes}`;
+            document.getElementById('endTime').value = `${hours}:${minutes}`;
+        });
+    </script>
+</body>
+</html>
