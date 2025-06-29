@@ -10,17 +10,57 @@
         /* Styles de base pour le corps et la police */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Arrière-plan doux */
+            background-color: #f0f4f8; /* Arrière-plan doux par défaut */
             color: #333; /* Couleur de texte principale */
+            /* Nouvelle image de fond pour toute l'application (URL de placeholder) */
+            background-image: url('https://placehold.co/1920x1080/2a3a4c/ffffff?text=Gym+Background+Image'); /* Image de fond générique */
+            background-size: cover; /* L'image couvrira toute la zone */
+            background-position: center; /* Centre l'image */
+            background-repeat: no-repeat; /* Ne répète pas l'image */
+            background-attachment: fixed; /* Fixe l'image de fond lors du défilement */
+            position: relative; /* Nécessaire pour le pseudo-élément ::before */
+            z-index: 0; /* Assure que le corps est en dessous de l'overlay global */
         }
+
+        /* Overlay semi-transparent pour le corps afin d'améliorer la lisibilité du texte */
+        body::before {
+            content: '';
+            position: fixed; /* Utiliser fixed pour couvrir tout le viewport */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7); /* Overlay blanc semi-transparent */
+            z-index: -1; /* Place l'overlay derrière le contenu mais devant l'image de fond */
+        }
+
         /* Conteneur principal de l'application */
         .container {
             max-width: 1000px;
             margin: 2rem auto; /* Centrage et espacement */
             padding: 1.5rem;
-            background-color: #ffffff; /* Fond blanc pour le contenu */
+            background-color: rgba(255, 255, 255, 0.9); /* Fond blanc avec légère opacité */
             border-radius: 12px; /* Coins arrondis */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Ombre douce */
+            position: relative; /* Assure que le conteneur est au-dessus de l'overlay du body */
+            z-index: 1;
+
+            /* Nouveau fond avec formes géométriques violettes */
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(150, 0, 200, 0.05) 0px, /* Violet avec opacité */
+                rgba(150, 0, 200, 0.05) 1px,
+                transparent 1px,
+                transparent 10px
+            ),
+            repeating-linear-gradient(
+                -45deg,
+                rgba(150, 0, 200, 0.05) 0px, /* Violet avec opacité */
+                rgba(150, 0, 200, 0.05) 1px,
+                transparent 1px,
+                transparent 10px
+            );
+            background-size: 20px 20px; /* Taille du motif */
         }
         /* Styles pour les groupes de formulaires (label + input) */
         .form-group label {
@@ -37,8 +77,8 @@
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: #6366f1; /* Couleur de bordure au focus */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Ombre au focus */
+            border-color: #3b82f6; /* Bleu plus vif au focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Ombre au focus */
         }
         /* Styles des boutons */
         .btn {
@@ -49,29 +89,30 @@
             transition: background-color 0.2s, transform 0.1s; /* Transitions pour le survol */
         }
         .btn-primary {
-            background-color: #6366f1; /* Bleu indigo */
+            background-color: #000000; /* Noir pour le bouton principal */
             color: white;
         }
         .btn-primary:hover {
-            background-color: #4f46e5; /* Bleu indigo plus foncé au survol */
+            background-color: #333333; /* Noir plus clair au survol */
             transform: translateY(-1px); /* Léger effet de soulèvement */
         }
         .btn-secondary {
-            background-color: #ef4444; /* Rouge pour l'action secondaire */
+            background-color: #dc2626; /* Rouge plus profond pour l'action secondaire */
             color: white;
         }
         .btn-secondary:hover {
-            background-color: #dc2626; /* Rouge plus foncé au survol */
+            background-color: #b91c1c; /* Rouge plus foncé au survol */
             transform: translateY(-1px);
         }
         /* Styles du tableau */
         table {
             width: 100%;
             border-collapse: collapse; /* Supprime l'espace entre les cellules */
-            margin-top: 1.5rem;
+            margin-top: 0; /* Ajusté car le wrapper aura son propre padding/margin */
+            background-color: transparent; /* Rend le tableau transparent pour voir l'overlay du wrapper */
         }
         th, td {
-            padding: 0.75rem;
+            padding: 1rem; /* Augmentation du padding pour plus d'espace */
             text-align: left;
             border-bottom: 1px solid #e2e8f0; /* Bordure inférieure des cellules */
         }
@@ -85,7 +126,7 @@
             position: relative;
         }
         th:hover {
-            background-color: #e2e8f0; /* Changement de couleur au survol des en-têtes */
+            background-color: #e9eff6; /* Changement de couleur plus moderne au survol des en-têtes */
         }
         /* Indicateurs de tri pour les en-têtes de tableau */
         th.asc::after {
@@ -105,15 +146,48 @@
             transform: translateY(-50%);
         }
         tr:hover {
-            background-color: #f0f4f8; /* Couleur de survol pour les lignes du tableau */
+            background-color: rgba(238, 242, 247, 0.7); /* Couleur de survol plus moderne avec opacité */
         }
-        /* Couleurs pastel pour alterner les lignes par date */
+        /* Couleurs pastel pour alterner les lignes par date (légèrement ajustées pour un look plus doux) */
         .bg-pink-pastel {
-            background-color: #fce7f3; /* Un rose clair */
+            background-color: rgba(253, 236, 252, 0.7); /* Un rose très clair et doux avec opacité */
         }
         .bg-blue-pastel {
-            background-color: #e0f2fe; /* Un bleu clair */
+            background-color: rgba(230, 247, 255, 0.7); /* Un bleu très clair et doux avec opacité */
         }
+
+        /* Wrapper du tableau sans image de fond propre, s'appuie sur le body background */
+        .table-background-wrapper {
+            background-image: none; /* Supprime l'image de fond spécifique au tableau */
+            background-color: transparent; /* Assure la transparence pour voir le fond du body */
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem; /* Padding interne pour le contenu du tableau */
+            position: relative; /* Nécessaire pour le z-index de son overlay */
+            overflow: hidden; /* Cache le débordement de l'image */
+        }
+
+        /* Overlay pour le wrapper du tableau pour assurer la lisibilité du texte du tableau */
+        .table-background-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.6); /* Overlay blanc semi-transparent */
+            z-index: 1; /* Assure que l'overlay est au-dessus du fond du body mais sous le contenu du tableau */
+            border-radius: 12px;
+        }
+
+        /* Assurez-vous que le contenu du tableau est au-dessus de l'overlay du wrapper */
+        .table-background-wrapper table,
+        .table-background-wrapper th,
+        .table-background-wrapper td {
+            position: relative;
+            z-index: 2;
+        }
+
         /* Conteneur des graphiques */
         .chart-container {
             position: relative;
@@ -190,8 +264,7 @@
             td:nth-of-type(5):before { content: "Charge (kg)"; }
             td:nth-of-type(6):before { content: "Répétitions"; }
             td:nth-of-type(7):before { content: "Poids (kg)"; }
-            td:nth-of-type(8):before { content: "Graisse (%)"; }
-            td:nth-of-type(9):before { content: "Total Exercice (kg)"; } /* Ajusté pour le nouvel ordre */
+            td:nth-of-type(8):before { content: "Total Exercice (kg)"; } /* Adjusted for new order */
         }
     </style>
 </head>
@@ -199,7 +272,8 @@
     <div id="loading-overlay">Chargement des données...</div>
 
     <div class="container">
-        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Suivi de Séances de Musculation</h1>
+        <!-- Titre principal de l'application, maintenant en noir -->
+        <h1 class="text-3xl font-bold text-center mb-6" style="color: #000000;">Suivi de Séances de Musculation - Gwladys</h1>
 
         <form id="workoutForm" class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -231,10 +305,7 @@
                     <label for="bodyWeight" class="block text-sm mb-1">Poids corporel (kg) :</label>
                     <input type="number" id="bodyWeight" name="bodyWeight" class="w-full" step="0.1" min="0" placeholder="Ex: 60.5" required>
                 </div>
-                <div class="form-group">
-                    <label for="bodyFat" class="block text-sm mb-1">Taux de graisse (%) :</label>
-                    <input type="number" id="bodyFat" name="bodyFat" class="w-full" step="0.1" min="0" max="100" placeholder="Ex: 18.0" required>
-                </div>
+                <!-- Le champ "Taux de graisse (%)" a été retiré ici -->
             </div>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 <button type="submit" class="btn btn-primary">Ajouter l'exercice</button>
@@ -242,8 +313,8 @@
             </div>
         </form>
 
-        <h2 class="text-2xl font-bold text-center mb-4 text-indigo-600">Historique des Séances</h2>
-        <div class="overflow-x-auto rounded-lg shadow mb-8">
+        <h2 class="text-2xl font-bold text-center mb-4" style="color: #000000;">Historique des Séances</h2>
+        <div class="table-background-wrapper">
             <table id="workoutTable" class="min-w-full bg-white">
                 <thead>
                     <tr>
@@ -254,7 +325,7 @@
                         <th data-sort="weightUsed">Charge (kg)</th>
                         <th data-sort="repetitions">Répétitions</th>
                         <th data-sort="bodyWeight">Poids (kg)</th>
-                        <th data-sort="bodyFat">Graisse (%)</th>
+                        <!-- La colonne "Graisse (%)" a été retirée ici -->
                         <th>Total Exercice (kg)</th>
                     </tr>
                 </thead>
@@ -263,7 +334,7 @@
             </table>
         </div>
 
-        <h2 class="text-2xl font-bold text-center mb-4 text-indigo-600">Graphiques de Progression</h2>
+        <h2 class="text-2xl font-bold text-center mb-4" style="color: #000000;">Graphiques de Progression</h2>
         <div class="chart-container">
             <div class="form-group mb-4">
                 <label for="exerciseSelect" class="block text-sm mb-1">Sélectionner un exercice :</label>
@@ -366,7 +437,7 @@
 
         /**
          * Affiche toutes les séances d'entraînement dans le tableau HTML.
-         * Les séances sont regroupées par date pour afficher les informations communes (date, heure, poids corporel, graisse).
+         * Les séances sont regroupées par date pour afficher les informations communes (date, heure, poids corporel).
          * @param {Array<Object>} workoutsToRender - Le tableau des objets de séance à afficher.
          */
         const renderWorkoutsTable = (workoutsToRender) => {
@@ -397,7 +468,7 @@
                             startTime: workout.startTime,
                             endTime: workout.endTime,
                             bodyWeight: workout.bodyWeight,
-                            bodyFat: workout.bodyFat
+                            // bodyFat est retiré
                         },
                         exercises: [],
                         totalWeightForDay: 0 // Initialise le total journalier
@@ -450,10 +521,8 @@
                         cell.textContent = commonData.bodyWeight;
                         cell.rowSpan = numRowsForCommonData;
 
-                        cell = row.insertCell(); // Taux de graisse
-                        cell.textContent = commonData.bodyFat;
-                        cell.rowSpan = numRowsForCommonData;
-
+                        // La cellule pour le Taux de graisse est retirée ici
+                        
                         row.insertCell().textContent = exercise.totalWeightPerExercise.toFixed(1); // Total par exercice (dernière colonne)
 
                     } else {
@@ -474,6 +543,7 @@
                     summaryRow.classList.add('border-t-2', 'border-gray-300'); // Ajoute une bordure supérieure pour la séparation
 
                     // Crée une cellule pour l'étiquette "Total Journalier" qui s'étend sur les colonnes Exercice à Répétitions
+                    // Le colSpan est ajusté car une colonne a été retirée
                     const totalLabelCell = summaryRow.insertCell();
                     totalLabelCell.colSpan = 3; // S'étend sur Exercice, Charge, Répétitions
                     totalLabelCell.textContent = 'Total Journalier :';
@@ -562,16 +632,6 @@
                                     size: 14
                                 }
                             }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title: function(context) {
-                                    return `Date: ${context[0].label}`;
-                                    },
-                                label: function(context) {
-                                    return `Charge: ${context.raw} kg`;
-                                }
-                            }
                         }
                     },
                     scales: {
@@ -634,7 +694,7 @@
             const weightUsed = parseFloat(document.getElementById('weightUsed').value);
             const repetitions = parseInt(document.getElementById('repetitions').value);
             const bodyWeight = parseFloat(document.getElementById('bodyWeight').value);
-            const bodyFat = parseFloat(document.getElementById('bodyFat').value);
+            // const bodyFat = parseFloat(document.getElementById('bodyFat').value); // Retiré
 
             if (!exercise) {
                 alert('Veuillez entrer le nom de l\'exercice.');
@@ -649,7 +709,7 @@
                 weightUsed,
                 repetitions,
                 bodyWeight,
-                bodyFat,
+                // bodyFat: bodyFat, // Retiré
                 timestamp: new Date().toISOString() // Horodatage ISO string pour la persistance
             };
 
@@ -694,7 +754,7 @@
                 document.getElementById('weightUsed').value = '';
                 document.getElementById('repetitions').value = '';
                 document.getElementById('bodyWeight').value = '';
-                document.getElementById('bodyFat').value = '';
+                // document.getElementById('bodyFat').value = ''; // Retiré
             }
         });
 
@@ -731,7 +791,7 @@
                     } else if (column === 'startTime' || column === 'endTime') {
                         valA = new Date(`2000/01/01T${valA}`); // Crée un objet Date pour comparer les heures
                         valB = new Date(`2000/01/01T${valB}`);
-                    } else if (['weightUsed', 'repetitions', 'bodyWeight', 'bodyFat'].includes(column)) {
+                    } else if (['weightUsed', 'repetitions', 'bodyWeight'].includes(column)) { // 'bodyFat' retiré ici
                         valA = parseFloat(valA);
                         valB = parseFloat(valB);
                     }
@@ -772,3 +832,4 @@
     </script>
 </body>
 </html>
+
